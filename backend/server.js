@@ -25,6 +25,14 @@ app.use(cors({
   credentials: true
 }));
 
+
+// SPA FALLBACK 
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) return next();
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
+
 app.use(clerkMiddleware());
 
 // API ROUTES
@@ -44,11 +52,6 @@ app.get("/video-calls", protectRoute, (req, res) => {
 const distPath = path.join(__dirname, "../frontend/dist");
 app.use(express.static(distPath));
 
-// SPA FALLBACK 
-app.use((req, res, next) => {
-  if (req.path.startsWith("/api")) return next();
-  res.sendFile(path.join(distPath, "index.html"));
-});
 
 // START SERVER
 const startServer = async () => {
