@@ -19,7 +19,6 @@ const app = express()
 app.use(express.json())
 const allowedOrigins = [
   ENV.CLIENT_URL,
-  'https://jobinterview-platform-telent-iq.onrender.com'
 ].filter(Boolean);
 
 app.use(cors({
