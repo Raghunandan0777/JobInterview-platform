@@ -12,8 +12,7 @@ router.get("/my-recent", protectRoute, getMyRecentSessions)
 
 
 router.get("/:id", protectRoute, getSessionById)
-router.get("/:id/join", protectRoute, joinSession)
-router.get("/:id/end", protectRoute, endSession)
-
+router.post("/:id/join", protectRoute, joinSession)
+router.post("/:id/end", protectRoute, endSession)
 export default router
 
