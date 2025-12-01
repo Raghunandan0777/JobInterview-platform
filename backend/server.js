@@ -17,7 +17,15 @@ const app = express()
 // middleware
 
 app.use(express.json())
-app.use(cors({origin:ENV.CLIENT_URL, credentials:true}));
+const allowedOrigins = [
+  ENV.CLIENT_URL,
+  'https://jobinterview-platform-telent-iq.onrender.com'
+].filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(clerkMiddleware())
 
 
