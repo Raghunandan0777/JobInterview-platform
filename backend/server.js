@@ -9,13 +9,19 @@ import { protectRoute } from './middleware/protectRoute.js';
 import chatRoutes from "./routes/chatRoutes.js"
 import sessionRoute from "./routes/sessionRoute.js"
 
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
-const __dirname = path.resolve();
 
 const app = express()
 
-app.use(express.static(path.join(__dirname, "dist")));
+
+
+
 
 // middleware
 
