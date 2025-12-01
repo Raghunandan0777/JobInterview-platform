@@ -11,27 +11,45 @@ import sessionRoute from "./routes/sessionRoute.js"
 
 
 
+const __dirname = path.resolve();
+
 const app = express()
 
+app.use(express.static(path.join(__dirname, "dist")));
 
 // middleware
 
 app.use(express.json())
-const allowedOrigins = [
-  ENV.CLIENT_URL,
-  "https://jobinterview-platform.onrender.com",
-].filter(Boolean);
 
+const allowedOrigins = [ENV.CLIENT_URL];
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
+
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
 app.use(clerkMiddleware())
 
 
 app.use("/api/inngest", serve({client: inngest,functions}))
 app.use("/api/chat", chatRoutes)
 app.use("/api/sessions", sessionRoute)
+
+const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(distPath));
+
+// Serve index.html for all non-API GET routes (SPA fallback)
+app.get(/^\/(?!api\/).*/, (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
+
 
 app.get("/", (req,res) => {
     res.send("server is working")
