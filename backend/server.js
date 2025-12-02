@@ -11,7 +11,10 @@ import { serve } from "inngest/express";
 import { ENV } from "./lib/env.js";
 
 
-const app = express(); 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
 
 app.use(
   cors({
@@ -30,11 +33,6 @@ app.use(clerkMiddleware());
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoute);
-
-// Serve frontend build
-const distPath = path.join(__dirname, "../frontend/dist");
-
-app.use(express.static(distPath));
 
 
 const start = async () => {
