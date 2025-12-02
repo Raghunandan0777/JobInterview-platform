@@ -14,6 +14,16 @@ function CreateSessionModal({
 
   if (!isOpen) return null;
 
+  const handleProblemChange = (e) => {
+    const selectedProblem = problems.find((p) => p.title === e.target.value);
+    if (selectedProblem) {
+      setRoomConfig({
+        problem: selectedProblem.title,
+        difficulty: selectedProblem.difficulty,
+      });
+    }
+  };
+
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-2xl">
@@ -30,18 +40,11 @@ function CreateSessionModal({
             <select
               className="select w-full"
               value={roomConfig.problem}
-              onChange={(e) => {
-                const selectedProblem = problems.find((p) => p.title === e.target.value);
-                setRoomConfig({
-                  difficulty: selectedProblem.difficulty,
-                  problem: e.target.value,
-                });
-              }}
+              onChange={handleProblemChange}
             >
               <option value="" disabled>
                 Choose a coding problem...
               </option>
-
               {problems.map((problem) => (
                 <option key={problem.id} value={problem.title}>
                   {problem.title} ({problem.difficulty})
@@ -60,6 +63,9 @@ function CreateSessionModal({
                   Problem: <span className="font-medium">{roomConfig.problem}</span>
                 </p>
                 <p>
+                  Difficulty: <span className="font-medium">{roomConfig.difficulty}</span>
+                </p>
+                <p>
                   Max Participants: <span className="font-medium">2 (1-on-1 session)</span>
                 </p>
               </div>
@@ -71,18 +77,12 @@ function CreateSessionModal({
           <button className="btn btn-ghost" onClick={onClose}>
             Cancel
           </button>
-
           <button
             className="btn btn-primary gap-2"
             onClick={onCreateRoom}
             disabled={isCreating || !roomConfig.problem}
           >
-            {isCreating ? (
-              <LoaderIcon className="size-5 animate-spin" />
-            ) : (
-              <PlusIcon className="size-5" />
-            )}
-
+            {isCreating ? <LoaderIcon className="size-5 animate-spin" /> : <PlusIcon className="size-5" />}
             {isCreating ? "Creating..." : "Create"}
           </button>
         </div>
@@ -91,4 +91,5 @@ function CreateSessionModal({
     </div>
   );
 }
+
 export default CreateSessionModal;

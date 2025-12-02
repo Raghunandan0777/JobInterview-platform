@@ -1,48 +1,55 @@
 import { chatClient, streamClient } from "../lib/stream.js";
 import Session from "../models/Session.js";
 
+import { chatClient, streamClient } from "../lib/stream.js";
+import Session from "../models/Session.js";
+
 export async function createSession(req, res) {
   try {
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
-    if (!difficulty || !problem) {
+    if (!problem || !difficulty) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    // 1️ Create session in DB
+    // Create session in DB
     const session = await Session.create({ problem, difficulty, host: userId, callId });
 
-    // 2️ Create video room and capture the room info
-    const videoRoom = await streamClient.video.call("default", callId).getOrCreate({
-      data: {
+    // Create video call
+    try {
+      await streamClient.video.call("default", callId).getOrCreate({
+        data: {
+          created_by_id: clerkId,
+          custom: { problem, difficulty, sessionId: session._id.toString() },
+        },
+      });
+    } catch (videoError) {
+      console.error("Error creating video call:", videoError);
+    }
+
+    // Create chat channel
+    try {
+      const channel = chatClient.channel("messaging", callId, {
+        name: `${problem} Session`,
         created_by_id: clerkId,
-        custom: { problem, difficulty, sessionId: session._id.toString() },
-      },
-    });
+        members: [clerkId],
+      });
+      await channel.create();
+    } catch (chatError) {
+      console.error("Error creating chat channel:", chatError);
+    }
 
-    // 3️ Create chat channel and add host
-    const channel = chatClient.channel("messaging", callId, {
-      name: `${problem} Session`,
-      created_by_id: clerkId,
-      members: [clerkId],
-    });
-    await channel.create();
-
-    // 4️ Return session + room info to frontend
-    res.status(201).json({
-      session,
-      room: videoRoom, // include full video room info
-      chatChannel: { id: channel.id },
-    });
+    res.status(201).json({ session });
   } catch (error) {
-    console.log("Error in createSession:", error);
+    console.error("Error in createSession controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
 
 
@@ -61,12 +68,13 @@ export async function getActiveSessions(req, res) {
   }
 }
 
+import mongoose from "mongoose";
+
 export async function getMyRecentSessions(req, res) {
   try {
-    const userId = req.user._id;
+    const userId = mongoose.Types.ObjectId(req.user._id); 
 
     const sessions = await Session.find({
-      status: "completed",
       $or: [{ host: userId }, { participant: userId }],
     })
       .sort({ createdAt: -1 })
@@ -74,10 +82,11 @@ export async function getMyRecentSessions(req, res) {
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.log("Error in getRecentSession controller:", error.message);
-    res.status(500).json({ message: "internal server error" });
+    console.log("Error in getMyRecentSessions controller:", error.message);
+    res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
 export async function getSessionById(req, res) {
   try {
