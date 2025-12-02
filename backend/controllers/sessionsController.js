@@ -1,8 +1,7 @@
 import { chatClient, streamClient } from "../lib/stream.js";
 import Session from "../models/Session.js";
+import mongoose from "mongoose";
 
-import { chatClient, streamClient } from "../lib/stream.js";
-import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
   try {
@@ -68,7 +67,7 @@ export async function getActiveSessions(req, res) {
   }
 }
 
-import mongoose from "mongoose";
+
 
 export async function getMyRecentSessions(req, res) {
   try {
