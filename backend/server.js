@@ -11,12 +11,13 @@ import { serve } from "inngest/express";
 import { ENV } from "./lib/env.js";
 
 
-// CORS FIX — allow frontend on Vercel
+const app = express(); 
+
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://job-interview-platform-three.vercel.app"
+      "https://job-interview-platform-nu.vercel.app"
     ],
     credentials: true,
   })
@@ -35,11 +36,6 @@ const distPath = path.join(__dirname, "../frontend/dist");
 
 app.use(express.static(distPath));
 
-// SPA fallback
-app.get("*", (req, res) => {
-  if (req.path.startsWith("/api")) return;
-  res.sendFile(path.join(distPath, "index.html"));
-});
 
 const start = async () => {
   await connectDB();
