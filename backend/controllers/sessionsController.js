@@ -8,20 +8,23 @@ export async function createSession(req, res) {
     const clerkId = req.user.clerkId;
 
     if (!difficulty || !problem) {
-      return res.status(400).json({ message: "problem and difficulty are required" });
+      return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
+    // 1️ Create session in DB
     const session = await Session.create({ problem, difficulty, host: userId, callId });
 
-    await streamClient.video.call("default", callId).getOrCreate({
+    // 2️ Create video room and capture the room info
+    const videoRoom = await streamClient.video.call("default", callId).getOrCreate({
       data: {
         created_by_id: clerkId,
         custom: { problem, difficulty, sessionId: session._id.toString() },
       },
     });
 
+    // 3️ Create chat channel and add host
     const channel = chatClient.channel("messaging", callId, {
       name: `${problem} Session`,
       created_by_id: clerkId,
@@ -29,12 +32,20 @@ export async function createSession(req, res) {
     });
     await channel.create();
 
-    res.status(201).json({ session });
+    // 4️ Return session + room info to frontend
+    res.status(201).json({
+      session,
+      room: videoRoom, // include full video room info
+      chatChannel: { id: channel.id },
+    });
   } catch (error) {
     console.log("Error in createSession:", error);
-    res.status(500).json("Internal server error");
+    res.status(500).json({ message: "Internal server error" });
   }
 }
+
+
+
 
 export async function getActiveSessions(req, res) {
   try {
