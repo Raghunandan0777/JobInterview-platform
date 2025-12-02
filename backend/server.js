@@ -20,8 +20,7 @@ app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
 app.use(
   cors({
-    origin: [ENV.CLIENT_URL],
-    "https://job-interview-platform-nu.vercel.app",
+    origin: [ENV.CLIENT_URL, "https://job-interview-platform-nu.vercel.app"],
     credentials: true,
   })
 );
