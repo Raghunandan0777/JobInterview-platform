@@ -1,71 +1,57 @@
-import express from "express";
-import path from "path";
+import { ENV } from './lib/env.js';
+import express from 'express';
+import { connectDB } from './lib/db.js';
 import cors from "cors";
+import { functions, inngest } from './lib/inngest.js';
 import { serve } from "inngest/express";
-import { clerkMiddleware } from "@clerk/express";
-
-import { ENV } from "./lib/env.js";
-import { connectDB } from "./lib/db.js";
-import { inngest, functions } from "./lib/inngest.js";
+import { clerkMiddleware } from '@clerk/express';
+import { protectRoute } from './middleware/protectRoute.js';
 
 import chatRoutes from "./routes/chatRoutes.js";
-import sessionRoutes from "./routes/sessionRoute.js";
+import sessionRoute from "./routes/sessionRoute.js";
 
 const app = express();
 
-const __dirname = path.resolve();
-
 // middleware
 app.use(express.json());
-// credentials:true meaning?? => server allows a browser to include cookies on request
 
-
+// CORS FIX
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://job-interview-platform-three.vercel.app"
+  ENV.CLIENT_URL,
+  "https://job-interview-platform-three.vercel.app",
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS blocked: " + origin));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
+app.use(clerkMiddleware());
 
-
-app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
-
+// API routes only
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
-app.use("/api/sessions", sessionRoutes);
+app.use("/api/sessions", sessionRoute);
 
-app.get("/health", (req, res) => {
-  res.status(200).json({ msg: "api is up and running" });
+app.get("/", (req,res) => {
+  res.status(200).send("Backend running ✔️");
 });
 
-// make our app ready for deployment
-if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+app.get("/video-calls", protectRoute, (req,res) => {
+  res.status(200).json({msg: "this is protect route"});
+});
 
-  app.get("/{*any}", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-  });
-}
-
-const startServer = async () => {
+const startserver = async () => {
   try {
     await connectDB();
-    app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
+    app.listen(ENV.PORT, () => {
+      console.log("server is running on", ENV.PORT);
+    });
   } catch (error) {
-    console.error("💥 Error starting the server", error);
+    console.log("error in connecting db", error);
   }
 };
 
-startServer();
+startserver();
