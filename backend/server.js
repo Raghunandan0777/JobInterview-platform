@@ -10,10 +10,6 @@ import { inngest, functions } from "./lib/inngest.js";
 import { serve } from "inngest/express";
 import { ENV } from "./lib/env.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
 
 // CORS FIX — allow frontend on Vercel
 app.use(
