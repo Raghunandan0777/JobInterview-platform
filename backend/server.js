@@ -15,6 +15,9 @@ const app = express();
 
 connectDB();
 
+
+const PORT = process.env.PORT || 3000;
+
 // middleware
 app.use(express.json());
 app.use(
