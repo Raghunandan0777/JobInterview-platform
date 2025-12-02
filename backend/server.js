@@ -20,15 +20,30 @@ const PORT = process.env.PORT || 3000;
 
 // middleware
 app.use(express.json());
-app.use(
-  cors({
-    origin: [
-      ENV.CLIENT_URL,
-      "https://job-interview-platform-nu.vercel.app",
-    ],
-    credentials: true,
-  })
-);
+
+
+const allowedOrigins = [
+  "http://localhost:3000",                      // for local dev (optional)
+  "https://job-interview-platform-steel.vercel.app", //  frontend origin on Vercel
+  
+];
+
+const corsOptions = {
+  origin: (incomingOrigin, callback) => {
+    if (!incomingOrigin || allowedOrigins.includes(incomingOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","X-Requested-With"],
+};
+
+app.use(cors(corsOptions));
+
+
 
 app.use(clerkMiddleware());
 
