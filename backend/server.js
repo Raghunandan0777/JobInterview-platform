@@ -24,7 +24,9 @@ app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",                      // for local dev (optional)
-  "https://job-interview-platform-steel.vercel.app", //  frontend origin on Vercel
+  "https://job-interview-platform-steel.vercel.app",
+  "ob-interview-platform-git-main-raghunandan-shahs-projects.vercel.app",
+  "job-interview-platform-31s8lf0g9-raghunandan-shahs-projects.vercel.app" //  frontend origin on Vercel
   
 ];
 
