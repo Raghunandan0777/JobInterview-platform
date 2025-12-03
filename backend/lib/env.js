@@ -14,5 +14,4 @@ export const ENV = {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     
 
-
 }

@@ -11,6 +11,16 @@ import { inngest, functions } from "./lib/inngest.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
 
+
+console.log("LOADED ENV:", {
+  PORT: process.env.PORT,
+  DB_URL: process.env.DB_URL,
+  STREAM_API_KEY: process.env.STREAM_API_KEY,
+  STREAM_API_SECRET: process.env.STREAM_API_SECRET,
+});
+
+
+
 const app = express();
 
 
