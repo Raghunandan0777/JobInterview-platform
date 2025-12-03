@@ -13,53 +13,38 @@ import sessionRoutes from "./routes/sessionRoute.js";
 
 const app = express();
 
-connectDB();
-
-
-const PORT = process.env.PORT || 3000;
 
 // middleware
 app.use(express.json());
-
-
+// credentials:true meaning?? => server allows a browser to include cookies on request
 const allowedOrigins = [
-  "http://localhost:5173",                      // for local dev (optional)
+  "http://localhost:5173",
   "https://job-interview-platform-steel.vercel.app",
-  "https://job-interview-platform-git-main-raghunandan-shahs-projects.vercel.app/dashboa",
-  "https://job-interview-platform-9pcw7y0dc-raghunandan-shahs-projects.vercel.app" //  frontend origin on Vercel
-  
+  "https://job-interview-platform-git-main-raghunandan-shahs-projects.vercel.app",
+  "https://job-interview-platform-31s8lf0g9-raghunandan-shahs-projects.vercel.app"
 ];
-
-const corsOptions = {
-  origin: (incomingOrigin, callback) => {
-    if (!incomingOrigin || allowedOrigins.includes(incomingOrigin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization","X-Requested-With"],
-};
-
-app.use(cors(corsOptions));
-
-
-
-app.use(clerkMiddleware());
-
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
-});
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoutes);
 
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.get("/health", (req, res) => {
+  res.status(200).json({ msg: "api is up and running" });
+});
+app.get("/", (req, res) => {
+  res.status(200).json({ msg: "server is  running" });
 });
 
-export default app;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
+  } catch (error) {
+    console.error("💥 Error starting the server", error);
+  }
+};
+
+startServer();
