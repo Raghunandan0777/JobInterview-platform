@@ -11,76 +11,99 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
   const [channel, setChannel] = useState(null);
   const [isInitializingCall, setIsInitializingCall] = useState(true);
 
+  // Log whenever the hook is called
+  console.log('🔄 useStreamClient hook rendered');
+  console.log('📦 Received props:', {
+    session,
+    loadingSession,
+    isHost,
+    isParticipant
+  });
+
   useEffect(() => {
+    console.log('🔄 useEffect triggered');
+    console.log('📦 Effect dependencies:', {
+      hasSession: !!session,
+      sessionCallId: session?.callId,
+      sessionStatus: session?.status,
+      loadingSession,
+      isHost,
+      isParticipant
+    });
+
     let videoCall = null;
     let chatClientInstance = null;
 
     const initCall = async () => {
-      console.log('🔍 initCall triggered');
-      console.log('📋 Session:', session);
-      console.log('📋 callId:', session?.callId);
-      console.log('📋 isHost:', isHost);
-      console.log('📋 isParticipant:', isParticipant);
-      console.log('📋 status:', session?.status);
-      console.log('📋 loadingSession:', loadingSession);
+      console.log('🔍 initCall function started');
       
       if (!session?.callId) {
-        console.log('❌ Blocked: No callId');
+        console.log('❌ Blocked: No callId in session');
+        console.log('Session object:', session);
+        setIsInitializingCall(false);
         return;
       }
+      
       if (!isHost && !isParticipant) {
-        console.log('❌ Blocked: Not host or participant');
+        console.log('❌ Blocked: User is neither host nor participant');
+        console.log('isHost:', isHost, 'isParticipant:', isParticipant);
+        setIsInitializingCall(false);
         return;
       }
+      
       if (session.status === "completed") {
-        console.log('❌ Blocked: Session completed');
+        console.log('❌ Blocked: Session is completed');
+        setIsInitializingCall(false);
         return;
       }
 
-      console.log('✅ All checks passed, starting initialization...');
+      console.log('✅ All checks passed! Starting initialization...');
       
       try {
-        console.log('🎬 Step 1: Getting token...');
-        const { token, userId, userName, userImage } = await sessionApi.getStreamToken();
-        console.log('✅ Token received for user:', userId);
+        console.log('🎬 Step 1: Getting token from backend...');
+        const tokenData = await sessionApi.getStreamToken();
+        console.log('✅ Token received:', {
+          userId: tokenData.userId,
+          hasToken: !!tokenData.token
+        });
 
-        console.log('🎬 Step 2: Initializing video client...');
+        console.log('🎬 Step 2: Initializing Stream video client...');
         const client = await initializeStreamClient(
           {
-            id: userId,
-            name: userName,
-            image: userImage,
+            id: tokenData.userId,
+            name: tokenData.userName,
+            image: tokenData.userImage,
           },
-          token
+          tokenData.token
         );
-        console.log('✅ Video client initialized');
+        console.log('✅ Stream video client initialized');
         setStreamClient(client);
 
-        console.log('🎬 Step 3: Creating call object...');
+        console.log('🎬 Step 3: Creating call object for callId:', session.callId);
         videoCall = client.call("default", session.callId);
-        console.log('✅ Call object created for:', session.callId);
+        console.log('✅ Call object created');
 
-        console.log('🎬 Step 4: Joining call...');
-        await videoCall.join({ create: true });
-        console.log('🎉 Successfully joined call!');
+        console.log('🎬 Step 4: Joining the call...');
+        const joinResult = await videoCall.join({ create: true });
+        console.log('✅ Successfully joined call!', joinResult);
         setCall(videoCall);
 
-        console.log('🎬 Step 5: Initializing chat client...');
+        console.log('🎬 Step 5: Setting up chat client...');
         const apiKey = import.meta.env.VITE_STREAM_API_KEY;
         chatClientInstance = StreamChat.getInstance(apiKey);
 
         await chatClientInstance.connectUser(
           {
-            id: userId,
-            name: userName,
-            image: userImage,
+            id: tokenData.userId,
+            name: tokenData.userName,
+            image: tokenData.userImage,
           },
-          token
+          tokenData.token
         );
         console.log('✅ Chat client connected');
         setChatClient(chatClientInstance);
 
-        console.log('🎬 Step 6: Creating chat channel...');
+        console.log('🎬 Step 6: Setting up chat channel...');
         const chatChannel = chatClientInstance.channel("messaging", session.callId);
         await chatChannel.watch();
         console.log('✅ Chat channel ready');
@@ -88,21 +111,27 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
         
         console.log('🎉 All initialization complete!');
       } catch (error) {
-        console.error('❌ Failed during initialization');
-        console.error('❌ Error message:', error.message);
-        console.error('❌ Full error:', error);
-        console.error('❌ Error stack:', error.stack);
-        toast.error("Failed to join video call");
+        console.error('❌ Error during initialization:');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Full error object:', error);
+        if (error.response) {
+          console.error('Error response:', error.response);
+        }
+        toast.error("Failed to join video call: " + error.message);
       } finally {
         setIsInitializingCall(false);
       }
     };
 
     if (session && !loadingSession) {
-      console.log('🚀 Calling initCall...');
+      console.log('🚀 Conditions met, calling initCall()');
       initCall();
     } else {
-      console.log('⏸️ Not calling initCall - session:', !!session, 'loadingSession:', loadingSession);
+      console.log('⏸️ NOT calling initCall. Reason:', {
+        hasSession: !!session,
+        loadingSession
+      });
       setIsInitializingCall(false);
     }
 
@@ -110,17 +139,11 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
     return () => {
       (async () => {
         try {
-          console.log('🧹 Cleanup started...');
-          if (videoCall) {
-            await videoCall.leave();
-            console.log('✅ Left video call');
-          }
-          if (chatClientInstance) {
-            await chatClientInstance.disconnectUser();
-            console.log('✅ Disconnected chat client');
-          }
+          console.log('🧹 Cleanup started');
+          if (videoCall) await videoCall.leave();
+          if (chatClientInstance) await chatClientInstance.disconnectUser();
           await disconnectStreamClient();
-          console.log('✅ Disconnected stream client');
+          console.log('✅ Cleanup complete');
         } catch (error) {
           console.error("Cleanup error:", error);
         }
