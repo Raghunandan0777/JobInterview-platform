@@ -9,7 +9,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProblemsPage from "./pages/ProblemsPage";
 import ProblemStatement from "./pages/ProblemStatment.jsx";
 import SessionPage from "./pages/SessionPage.jsx";
-import EnvTest from "./components/EnvTest.jsx";
+
 
 function App() {
   const { isSignedIn, isLoaded } = useUser();
@@ -48,7 +48,7 @@ function App() {
       </Routes>
 
       <Toaster />
-      <EnvTest/>
+    
        
 
     </>
