@@ -9,10 +9,10 @@ if (!apiKey || !apiSecret) {
   throw new Error("Stream credentials not configured");
 }
 
-// Correct Stream Video client
+// Stream Video client - takes (apiKey, secret) as parameters
 export const streamClient = new StreamClient(apiKey, apiSecret);
 
-// Correct Stream Chat client
+// Stream Chat client
 export const chatClient = StreamChat.getInstance(apiKey, apiSecret);
 
 // Utility functions
