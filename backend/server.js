@@ -34,9 +34,9 @@ app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://job-interview-platform-steel.vercel.app",
+  "https://job-interview-platform-eight.vercel.app",
   "https://job-interview-platform-git-main-raghunandan-shahs-projects.vercel.app",
-  "https://job-interview-platform-31s8lf0g9-raghunandan-shahs-projects.vercel.app"
+  "https://job-interview-platform-qpl8zes6g-raghunandan-shahs-projects.vercel.app"
 ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
