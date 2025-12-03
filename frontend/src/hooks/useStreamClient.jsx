@@ -16,10 +16,29 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
     let chatClientInstance = null;
 
     const initCall = async () => {
-      if (!session?.callId) return;
-      if (!isHost && !isParticipant) return;
-      if (session.status === "completed") return;
+      console.log('🔍 initCall triggered');
+      console.log('📋 Session:', session);
+      console.log('📋 callId:', session?.callId);
+      console.log('📋 isHost:', isHost);
+      console.log('📋 isParticipant:', isParticipant);
+      console.log('📋 status:', session?.status);
+      console.log('📋 loadingSession:', loadingSession);
+      
+      if (!session?.callId) {
+        console.log('❌ Blocked: No callId');
+        return;
+      }
+      if (!isHost && !isParticipant) {
+        console.log('❌ Blocked: Not host or participant');
+        return;
+      }
+      if (session.status === "completed") {
+        console.log('❌ Blocked: Session completed');
+        return;
+      }
 
+      console.log('✅ All checks passed, starting initialization...');
+      
       try {
         console.log('🎬 Step 1: Getting token...');
         const { token, userId, userName, userImage } = await sessionApi.getStreamToken();
@@ -69,24 +88,39 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
         
         console.log('🎉 All initialization complete!');
       } catch (error) {
-        console.error('❌ Failed at step:', error);
+        console.error('❌ Failed during initialization');
         console.error('❌ Error message:', error.message);
         console.error('❌ Full error:', error);
+        console.error('❌ Error stack:', error.stack);
         toast.error("Failed to join video call");
       } finally {
         setIsInitializingCall(false);
       }
     };
 
-    if (session && !loadingSession) initCall();
+    if (session && !loadingSession) {
+      console.log('🚀 Calling initCall...');
+      initCall();
+    } else {
+      console.log('⏸️ Not calling initCall - session:', !!session, 'loadingSession:', loadingSession);
+      setIsInitializingCall(false);
+    }
 
     // cleanup
     return () => {
       (async () => {
         try {
-          if (videoCall) await videoCall.leave();
-          if (chatClientInstance) await chatClientInstance.disconnectUser();
+          console.log('🧹 Cleanup started...');
+          if (videoCall) {
+            await videoCall.leave();
+            console.log('✅ Left video call');
+          }
+          if (chatClientInstance) {
+            await chatClientInstance.disconnectUser();
+            console.log('✅ Disconnected chat client');
+          }
           await disconnectStreamClient();
+          console.log('✅ Disconnected stream client');
         } catch (error) {
           console.error("Cleanup error:", error);
         }
