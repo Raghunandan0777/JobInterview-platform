@@ -67,13 +67,12 @@ export async function getActiveSessions(req, res) {
   }
 }
 
-
-
 export async function getMyRecentSessions(req, res) {
   try {
-    const userId = mongoose.Types.ObjectId(req.user._id); 
+    const userId = req.user._id;
 
     const sessions = await Session.find({
+      status: "completed",
       $or: [{ host: userId }, { participant: userId }],
     })
       .sort({ createdAt: -1 })
@@ -85,6 +84,7 @@ export async function getMyRecentSessions(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
 
 export async function getSessionById(req, res) {

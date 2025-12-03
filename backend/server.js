@@ -23,7 +23,7 @@ app.use(express.json());
 
 
 const allowedOrigins = [
-  "http://localhost:3000",                      // for local dev (optional)
+  "http://localhost:5173",                      // for local dev (optional)
   "https://job-interview-platform-steel.vercel.app", //  frontend origin on Vercel
   
 ];
